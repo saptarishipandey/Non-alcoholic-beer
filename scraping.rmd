@@ -92,4 +92,57 @@ s.close()
 ```
 Now we have a dataframe as a Python object that can be worked with on R and cleaned into a singular dataframe for this beer
 
-             
+```{r}
+# The way to call Python objects in R is by using py$
+AthleticFreeWaveHazyIPABeer = py$AthleticFreeWaveHazyIPABeer 
+```
+Now we have this data. Might be a good idea to do some data cleaning and get the ratings separated into columns like `look`, `smell`, `taste`, `feel`, `overall`. Then, we might want to average it and add that information to the original dataframe that has nutritional information. 
+
+We could use the text reviews later.
+
+```{r}
+# I am sure the following code could be done in a cleaner way.
+
+look = AthleticFreeWaveHazyIPABeer$ratings %>% 
+  strsplit(" | ", fixed = TRUE) %>% 
+  unlist() %>% 
+  grep("look", ., value = T) %>% 
+  gsub("[a-z]", "", .) %>% 
+  gsub(":", "", .) %>% 
+  as.numeric()
+
+smell = AthleticFreeWaveHazyIPABeer$ratings %>% 
+  strsplit(" | ", fixed = TRUE) %>% 
+  unlist() %>% 
+  grep("smell", ., value = T) %>% 
+  gsub("[a-z]", "", .) %>% 
+  gsub(":", "", .) %>% 
+  as.numeric()
+
+taste = AthleticFreeWaveHazyIPABeer$ratings %>% 
+  strsplit(" | ", fixed = TRUE) %>% 
+  unlist() %>% 
+  grep("taste", ., value = T) %>% 
+  gsub("[a-z]", "", .) %>% 
+  gsub(":", "", .) %>% 
+  as.numeric()
+
+feel = AthleticFreeWaveHazyIPABeer$ratings %>% 
+  strsplit(" | ", fixed = TRUE) %>% 
+  unlist() %>% 
+  grep("feel", ., value = T) %>% 
+  gsub("[a-z]", "", .) %>% 
+  gsub(":", "", .) %>% 
+  as.numeric()
+
+overall = AthleticFreeWaveHazyIPABeer$ratings %>% 
+  strsplit(" | ", fixed = TRUE) %>% 
+  unlist() %>% 
+  grep("overall", ., value = T) %>% 
+  gsub("[a-z]", "", .) %>% 
+  gsub(":", "", .) %>% 
+  as.numeric()
+
+ratings_df_AthleticFreeWaveHazyIPABeer = data.frame(look, smell, taste, feel, overall)
+```
+This process can be repeated multiple times for all the drinks the retailer offers.
