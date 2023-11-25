@@ -1,0 +1,141 @@
+Here is the information we have for the different NA beer offerings so
+far.
+
+| product                                        | calories | carbohydrates | protein | fat |
+|------------------------------------------------|----------|---------------|---------|-----|
+| ATHLETIC FREE WAVE HAZY IPA BEER               | 70       | 16            | 1       | 0   |
+| ATHLETIC RUN WILD IPA BEER                     | 65       | 16            | 0       | 0   |
+| ATHLETIC UPSIDE DAWN GOLDEN ALE BEER           | 45       | 10            | 1       | 0   |
+| BUDWEISER ZERO BEER                            | 50       | 12            | 0       | 0   |
+| BUSCH NA BEER                                  | 60       | 12.9          | 0.6     | 0   |
+| CLAUSTHALER AMBER NA BEER                      | 75       | 16            | 1.1     | 0   |
+| CLAUSTHALER MALT BEVERAGE                      | 92       | 18.8          | 1.4     | 0   |
+| CLAUSTHALER DRY HOPPED MALT BEVERAGE           | 26       | 5.6           | 0.5     | 0   |
+| CLAUSTHALER SANTA HOLIDAY BREW BEER            | 106.5    | 24.5          | 0.5     | 0   |
+| COORS NON ALCOHOLIC MALT BEVERAGE              | 41       | 8             | 1       | 0   |
+| GENESEE NA MALT BEVERAGE                       | 70       | 15            | 0.2     | 0   |
+| GUINNESS NON ALCOHOLIC DRAUGHT MALT BEVERAGE   | 57.4838  | 12.84932      | 1.4     | 0   |
+| HAAKE BECK NA MALT BEVERAGE                    | 70       | 15            | 1       | 0   |
+| HEINEKEN 0.0 BEER                              | 74       | 17.1          | 0.9     | 0   |
+| ODOULS AMBER NA MALT BEVERAGE                  | 70       | 13            | 1       | 0   |
+| ODOULS NA BEER                                 | 60       | 13.3          | 0.7     | 0   |
+| OLD MILWAUKEE N A MALT BEVERAGE                | 58       | 12.1          | 0.4     | 0   |
+| SAINT PAULI N A MALT BEVERAGE                  | 90       | 23            | 1       | 0   |
+| SAMUEL ADAMS JUST THE HAZE HAZY JUICY NON ALCOHOLIC IPA BEER | 98    | 22          | 1.5     | 0   |
+| STELLA ARTOIS LIBERTE BEER                     | 63.21429 | 13.92857      | 1.636364| 0   |
+
+We also have the data saved in multiple csv files from Beer Advocate, the beer forum I scraped data from.
+Look at scraping.rmd in this repository for information on that.
+
+```{r, message = FALSE}
+rm(list = ls())
+library(tidyverse)
+```
+
+```{r}
+# Reading all the csv files that we have, thank you StackOverflow
+temp = list.files(pattern="\\.csv$")
+for (i in 1:length(temp)) assign(gsub("\\.csv$", "", temp[i]), read.csv(temp[i]))
+rm(temp)
+```
+
+
+```{r}
+# Making this into one list for easy access
+NABeersRatings = list("AthleticFreeWaveHazyIPABeer" = AthleticFreeWaveHazyIPABeer,
+                      "AthleticRunWildIPABeer" = AthleticRunWildIPABeer,
+                      "AthleticUpsideDawnGoldenAleBeer" = AthleticUpsideDawnGoldenAleBeer,
+                      "BudweiserZeroBeer" = BudweiserZeroBeer,
+                      "BuschNABeer" = BuschNABeer,
+                      "ClausthalerAmberNA" = ClausthalerAmberNA,
+                      "ClausthalerDryHoppedMaltBeverage" = ClausthalerDryHoppedMaltBeverage,
+                      "ClausthalerMaltBeverage" = ClausthalerMaltBeverage,
+                      "ClausthalerSantaHolidayBrewBeer" = ClausthalerSantaHolidayBrewBeer,
+                      "CoorsNonAlcoholicMaltBeverage" = CoorsNonAlcoholicMaltBeverage,
+                      "GeneseeNAMaltBeverage" = GeneseeNAMaltBeverage,
+                      "GuinnessNonAlcoholicDraughtMaltBeverage" = GuinnessNonAlcoholicDraughtMaltBeverage,
+                      "HaakeBeckNAMaltBeverage" = HaakeBeckNAMaltBeverage,
+                      "Heineken00Beer" = Heineken00Beer,
+                      "ODoulsAmberNAMaltBeverage" = ODoulsAmberNAMaltBeverage,
+                      "ODoulsNABeer" = ODoulsNABeer,
+                      "OldMilwaukeeNAMaltBeverage" = OldMilwaukeeNAMaltBeverage,
+                      "SaintPauliNAMaltBeverage" = SaintPauliNAMaltBeverage,
+                      "SamuelAdamsJustTheHazeJuicyNonAlcoholicIPABeer" = SamuelAdamsJustTheHazeJuicyNonAlcoholicIPABeer,
+                      "StellaArtoisLiberteBeer" = StellaArtoisLiberteBeer)
+
+# Preparing the data for PCA
+NABeerPCAData = data.frame(
+  product = c(
+    "Athletic Free Wave",
+    "Athletic Run Wild",
+    "Athletic Upside Dawn",
+    "Budweiser Zero",
+    "Busch NA",
+    "Clausthaler Amber",
+    "Clausthaler Malt Beverage",
+    "Clausthaler Dry Hopped",
+    "Clausthaler Santa Holiday Brew",
+    "Coors Edge",
+    "Genesee Non Alcoholic",
+    "Guinness Non Alcoholic Draught",
+    "Haake Beck Non Alcoholic",
+    "Heineken 0.0",
+    "O'Doul's Amber",
+    "O'Doul's NA",
+    "Old Milwaukee NA",
+    "St. Pauli NA",
+    "Samuel Adams Just The Haze",
+    "Stella Artois Liberte"),
+  calories = c(70, 65, 45, 50, 60, 75, 92, 26, 106.5, 41, 70, 57.4838, 70, 74, 70, 60, 58, 90, 98, 63.21429),
+  carbohydrates = c(16, 16, 10, 12, 12.9, 16, 18.8, 5.6, 24.5, 8, 15, 12.84932, 15, 17.1, 13, 13.3, 12.1, 23, 22, 13.92857),
+  protein = c(1, 0, 1, 0, 0.6, 1.1, 1.4, 0.5, 0.5, 1, 0.2, 1.4, 1, 0.9, 1, 0.7, 0.4, 1, 1.5, 1.636364),
+  look = c(map(NABeersRatings, ~mean(.$look, na.rm = T)) %>% unlist()),
+  smell = c(map(NABeersRatings, ~mean(.$smell, na.rm = T)) %>% unlist()),
+  taste = c(map(NABeersRatings, ~mean(.$taste, na.rm = T)) %>% unlist()),
+  feel = c(map(NABeersRatings, ~mean(.$feel, na.rm = T)) %>% unlist()),
+  overall = c(map(NABeersRatings, ~mean(.$overall, na.rm = T)) %>% unlist())
+)
+
+NABeerPCAData$product = factor(NABeerPCAData$product)
+```
+
+Now we can run a PCA on this data.
+
+```{r}
+NABeerPCA = prcomp(NABeerPCAData[2:9], scale = T)
+```
+
+Let us plot this
+
+```{r}
+# For making PCA biplots
+# install.packages("factoextra")
+library(factoextra)
+
+# for making text labels
+# install.packages("ggrepel")
+library(ggrepel)
+
+# for adding images
+# install.packages("ggimage")
+library(ggimage)
+
+#   install.packages("magick")
+library(magick)
+```
+
+I want to add images into the mix.
+```{r}
+logos = c(paste0("R:/Data/Users/sapta/Downloads/MS - Marketing Analytics - Class Downloads/2023 FALL/Capstone Project/Material/Logos/", names(NABeersRatings), ".png"))
+```
+
+```{r}
+NABeerPCAViz = fviz_pca_biplot(NABeerPCA,
+                geom = "point",
+                col.var = NA) +
+  geom_image(aes(image = logos),
+             size = 0.2,
+             alpha = 0.5)
+
+NABeerPCAViz
+```
