@@ -1,0 +1,95 @@
+Here I am going to show just one case of scraping data from the web, but in my original project,
+I have repeated this process multiple times for each of the products
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("rvest")
+library(rvest)
+```
+
+```{r}
+AthleticFreeWaveHazyIPABeer = data.frame()
+
+for(page_result in seq(from = 0, to = 40, by = 20)) {
+  link = paste0("https://www.beeradvocate.com/beer/profile/52867/512651/view=beer&show=recent&start=", page_result ,"#lists")
+  print(link)
+  page = read_html(link)
+  ratings = page %>% html_nodes(".muted:nth-child(8)") %>% html_text()
+  review = page %>% html_nodes("#rating_fullview_content_2 div") %>% html_text()
+  
+  AthleticFreeWaveHazyIPABeer = rbind(AthleticFreeWaveHazyIPABeer, data.frame(ratings, review))
+  
+  # Pause for 10 seconds (or more if needed) before the next iteration
+  Sys.sleep(10)
+}
+```
+
+Unfortunately, {rvest} is not able to properly scrape more reviews than the ones on the first page.
+After further investigation, I found that one needs to log in to view more reviews on the website.
+I could use RSelenium, but it is also possible to achieve this with BeautifulSoup in Python.
+
+```{r}
+#install.packages("reticulate")
+library(reticulate)
+```
+
+```{python}
+import requests
+from bs4 import BeautifulSoup
+import time
+```
+Now that we have the correct packages loaded, we can easily scrape data with BeautifulSoup.
+I used the dev tools on Chrome to first understand the HTML elements to scrape.
+
+```{python}
+# Using my log in to generate data from the website
+url = "https://www.beeradvocate.com/community/login/login"
+
+login = "******" # Hidden for privacy
+password = "*******" # Hidden for privacy
+
+payload = { 
+	"login": login, 
+	"password": password 
+} 
+
+# Initializing the requests.Session()
+s = requests.Session() 
+response = s.post(url, data=payload) 
+
+# The following should print 200 if done correctly
+# print(response.status_code)
+
+
+# Creating an empty dataframe to add the reviews and ratings to
+AthleticFreeWaveHazyIPABeer = pd.DataFrame()
+
+# The following for loop will iterate over 500 reviews and ratings to scrape data from.
+
+for page_num in range(0, 500, 20):
+  
+  # initializing the page
+  get_data = s.get("https://www.beeradvocate.com/beer/profile/52867/512651/?view=beer&show=recent&start=" + str(page_num))
+  soup = BeautifulSoup(get_data.content, "html.parser")
+  
+  # I used the CSS selector extension to select the right elements from the page.
+  ratings = [review.get_text() for review in soup.select(".muted:nth-child(8)")] # collect ratings for look, smell, etc. from the reviewers on the website
+  reviews = [review.get_text() for review in soup.select("#rating_fullview_content_2 div")] # collect full text reviews
+  
+  # combining the data into a single dataframe
+  page_data = pd.DataFrame({'ratings': ratings, 'reviews': reviews})
+  
+  # appending this data to the original dataframe
+  AthleticFreeWaveHazyIPABeer = pd.concat([AthleticFreeWaveHazyIPABeer, page_data], ignore_index=True)
+  
+  # adding a lag so as to not bombard the website. We're trying to be ethical here!
+  time.sleep(10)
+  
+# ending the session  
+s.close()
+  
+```
+Now we have a dataframe as a Python object that can be worked with on R and cleaned into a singular dataframe for this beer
+
+             
