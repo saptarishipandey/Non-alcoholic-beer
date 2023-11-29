@@ -1,0 +1,81 @@
+### Basic Text Analysis - Wordclouds
+
+```{r, message = FALSE}
+rm(list = ls())
+library(tidyverse)
+```
+
+```{r}
+# Reading all the csv files that we have, thank you StackOverflow
+temp = list.files(pattern="\\.csv$")
+for (i in 1:length(temp)) assign(gsub("\\.csv$", "", temp[i]), read.csv(temp[i]))
+rm(temp)
+
+NABeersRatings = list("AthleticFreeWaveHazyIPABeer" = AthleticFreeWaveHazyIPABeer,
+                      "AthleticRunWildIPABeer" = AthleticRunWildIPABeer,
+                      "AthleticUpsideDawnGoldenAleBeer" = AthleticUpsideDawnGoldenAleBeer,
+                      "BudweiserZeroBeer" = BudweiserZeroBeer,
+                      "BuschNABeer" = BuschNABeer,
+                      "ClausthalerAmberNA" = ClausthalerAmberNA,
+                      "ClausthalerDryHoppedMaltBeverage" = ClausthalerDryHoppedMaltBeverage,
+                      "ClausthalerMaltBeverage" = ClausthalerMaltBeverage,
+                      "ClausthalerSantaHolidayBrewBeer" = ClausthalerSantaHolidayBrewBeer,
+                      "CoorsNonAlcoholicMaltBeverage" = CoorsNonAlcoholicMaltBeverage,
+                      "GeneseeNAMaltBeverage" = GeneseeNAMaltBeverage,
+                      "GuinnessNonAlcoholicDraughtMaltBeverage" = GuinnessNonAlcoholicDraughtMaltBeverage,
+                      "HaakeBeckNAMaltBeverage" = HaakeBeckNAMaltBeverage,
+                      "Heineken00Beer" = Heineken00Beer,
+                      "ODoulsAmberNAMaltBeverage" = ODoulsAmberNAMaltBeverage,
+                      "ODoulsNABeer" = ODoulsNABeer,
+                      "OldMilwaukeeNAMaltBeverage" = OldMilwaukeeNAMaltBeverage,
+                      "SaintPauliNAMaltBeverage" = SaintPauliNAMaltBeverage,
+                      "SamuelAdamsJustTheHazeJuicyNonAlcoholicIPABeer" = SamuelAdamsJustTheHazeJuicyNonAlcoholicIPABeer,
+                      "StellaArtoisLiberteBeer" = StellaArtoisLiberteBeer)
+```
+
+For basic text mining, we can use the libraries: \{tm\}, \{wordcloud\}.
+
+```{r}
+#install.packages("tm")
+library(tm)
+#install.packages("wordcloud2")
+library(wordcloud2)
+```
+
+```{r, warning = FALSE}
+#| include: true
+#| echo: true
+#| output: true
+#| message: frue
+#| warning: frue
+#| error: true
+
+customStopwords = c("beer", "taste", "tastes", "like", "can", "canned", "ever", "appearance", "aroma", "head", "glass", "bottle", "beers", "the", "smell", "smells", "feel", "feels", "look", "looks", "color", "actually", "really", "pour", "pours", "poured", "much", "brew", "non", "not", "isnt", "still", "drink", "one", "just", "got", "want", "flavor", "overall", "ipa", "alcohol", "body", "nose", "wave", "especially", "relative", "idea", "abv", "around", "dont", "joke", "nonalcoholic", "alcoholic", "na", "seems", "ive", "nice", "decent", "average", "good", "great", "best", "bad", "worst", "better", "slight", "little", "moderate", "bit", "get", "low", "nas", "also", "say", "slightly", "athletic", "genesee", "odouls", "busch", "clausthaler", "budweiser", "bud", "guinness", "coors", "becks", "haake", "old milwaukee", "heineken", "saint pauli", "pauli", "st pauli", "samuel adams", "samuel", "adams", "stella", "artois", "carbonation", "sure", "finish", "notes", "session", "ipas", "canada", "less", "expected", "light", "almost", "purchased", "aftertaste", "review", "zero", "macro")
+
+x = 1
+for(i in NABeersRatings) {
+  corpus = Corpus(VectorSource(iconv(i$reviews, 'utf-8', 'ascii', sub='')))
+  
+  corpus = corpus %>% 
+    tm_map(removeNumbers) %>% 
+    tm_map(content_transformer(tolower)) %>% 
+    tm_map(removePunctuation) %>% 
+    tm_map(removeWords, stopwords("english")) %>% 
+    tm_map(removeWords, customStopwords) %>% 
+    tm_map(stripWhitespace)
+  
+  tdm = TermDocumentMatrix(corpus) %>% 
+    as.matrix()
+  
+  words = sort(rowSums(tdm), decreasing = T)
+  
+  wordFrequencyDF =data.frame(word = names(words),
+                              freq = words)
+  
+  assign(paste0(names(NABeersRatings[x]), "wordcloud"), value = wordcloud2(head(wordFrequencyDF, 25), rotateRatio = 0))
+  print(wordcloud2(head(wordFrequencyDF, 25), rotateRatio = 0))
+  x = x +1
+}
+
+rm(x)
+```
