@@ -15,3 +15,5 @@ I used R and Python for the scraping work. Some packages I used are listed below
 The entire project so far has allowed me to work on my web scraping, data manipulation, and principal component analysis skills.
 
 I've included code for the PCA based on the ratings people left for the NA Beers. This is the PCA visualization for the 20 competing NA Beers
+
+![Publix PCA](https://github.com/saptarishipandey/Non-alcoholic-beer/assets/103434562/92664b15-130f-4796-bae5-31c5ef62ec55)
