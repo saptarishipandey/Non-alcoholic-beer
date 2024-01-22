@@ -13,3 +13,5 @@ I used R and Python for the scraping work. Some packages I used are listed below
 * Python: Requests, BeautifulSoup4
 
 The entire project so far has allowed me to work on my web scraping, data manipulation, and principal component analysis skills.
+
+I've included code for the PCA based on the ratings people left for the NA Beers. This is the PCA visualization for the 20 competing NA Beers
